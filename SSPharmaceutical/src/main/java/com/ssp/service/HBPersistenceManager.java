@@ -5,11 +5,13 @@
  */
 package com.ssp.service;
 
+import com.ssp.modal.HBSSPObject;
 import lombok.extern.log4j.Log4j;
+import org.hibernate.Query;
 import org.hibernate.Session;
 
 import java.io.Serializable;
-import java.util.Objects;
+import java.util.*;
 
 /**
  * @author Shrey
@@ -80,5 +82,74 @@ public class HBPersistenceManager {
             throw new RuntimeException(eObj);
         }
         return object;
+    }
+
+    public <T> HBSSPObject createObject(Class<T> classObj, HashMap<String, Object> newMap) {
+        HBSSPObject hbsspObject = null;
+        try {
+            hbsspObject = this.createObject(classObj.getName(), newMap);
+        } catch (Exception eobj) {
+            throw new RuntimeException(eobj);
+        }
+        return hbsspObject;
+    }
+
+    public HBSSPObject createObject(String className, HashMap<String, Object> objMap) throws Exception {
+        Class<?> cls;
+        HBSSPObject hbsspObject = null;
+        try {
+            cls = Class.forName(className);
+            hbsspObject = (HBSSPObject) cls.newInstance();
+            this.session.save(hbsspObject);
+        } catch (ClassNotFoundException | InstantiationException | IllegalAccessException e) {
+            throw e;
+        } catch (Exception eobj) {
+            eobj.printStackTrace();
+            log.error(" Create Object : " + eobj);
+        }
+        return hbsspObject;
+    }
+
+    public ArrayList<Object> fetchHSSPSQLQuery(String sqlStr, Map<String, Object> newMap) {
+        ArrayList<Object> list = new ArrayList<>();
+        Query query = this.session.createSQLQuery(sqlStr);
+        this.setSQLProperty(query, newMap);
+        list.addAll(query.list());
+        return list;
+    }
+
+    private void setSQLProperty(Query query, Map<String, Object> newMap) {
+        if (Objects.nonNull(newMap) && newMap.size() != 0) {
+            for (String key : newMap.keySet()) {
+                Object value = newMap.get(key);
+                if (value instanceof ArrayList) {
+                    query.setParameterList(key, (Collection) value);
+                } else {
+                    query.setParameter(key, newMap.get(key));
+                }
+            }
+        }
+    }
+
+    private ArrayList<Long> fetchNativeNamedSQLQuery(String namedQuery, HashMap<String, Object> newMap) {
+        ArrayList<Long> list = new ArrayList<>();
+        try {
+            Query query = this.session.getNamedQuery(namedQuery);
+            this.setSQLProperty(query, newMap);
+            for (Object obj : query.list()) {
+                list.add(((Long) obj).longValue());
+            }
+        } catch (Exception eobj) {
+            throw eobj;
+        }
+        return list;
+    }
+
+    public void deleteObject(Object object) {
+        try {
+            this.session.delete(object);
+        } catch (Exception eobj) {
+            throw eobj;
+        }
     }
 }
