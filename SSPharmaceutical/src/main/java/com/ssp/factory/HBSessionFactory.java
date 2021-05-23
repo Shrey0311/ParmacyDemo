@@ -39,14 +39,8 @@ public class HBSessionFactory {
     }
 
     private HBSessionFactory() {
-//        File file = new File("C:/Users/DELL/Documents/NetBeansProjects/ParmacyDemo/SSPharmaceutical/src/main/java/hibernate.cfg.xml");
-//        System.out.println(file.getAbsolutePath() + " >>>>>>>>>>>>>>>>>>>>> ");
-//        System.out.println(file.exists() + " >>>>>>>>>>>>>>>>>>>>> ");
         Configuration configObj = new Configuration();
-        File cfgFile = new File("src/main/java/com/ssp/resource/hibernate.cfg.xml");
-        System.out.println("HBSessionFactory.HBSessionFactory: cfgFile = " + cfgFile.getAbsolutePath());
-        System.out.println("HBSessionFactory.HBSessionFactory: cfgFile.exists = " + cfgFile.exists());
-        configObj.configure(cfgFile);
+        configObj.configure(new File("src/main/java/com/ssp/resource/hibernate.cfg.xml"));
         registerAnnotatedClass(configObj);
         ServiceRegistry serviceRegistryObj = new StandardServiceRegistryBuilder().applySettings(configObj.getProperties()).build();
         sessionFactoryObj = configObj.buildSessionFactory(serviceRegistryObj);
