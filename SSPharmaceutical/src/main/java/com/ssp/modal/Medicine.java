@@ -25,7 +25,7 @@ public class Medicine extends HBSSPObject {
     @Column(name = "MFD_DATE")
     private Date mfdDate;
 
-    @Column(name = "StoreDate")
+    @Column(name = "STORE_DATE")
     private Date storeDate;
 
     @Column(name = "PRICE")

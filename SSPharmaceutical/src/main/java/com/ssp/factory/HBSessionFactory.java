@@ -50,7 +50,7 @@ public class HBSessionFactory {
         configObj.addAnnotatedClass(Medicine.class);
     }
 
-    public static HBSessionFactory buildSessionFactory() {
+    public static HBSessionFactory getSessionFactory() {
         return SingletonSessionFactory.INSTANCE.getHBSessionFactory();
     }
 

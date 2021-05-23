@@ -5,12 +5,14 @@
  */
 package com.ssp.service;
 
+import com.ssp.factory.HBSessionFactory;
 import com.ssp.modal.HBSSPObject;
 import lombok.extern.log4j.Log4j;
 import org.hibernate.Query;
 import org.hibernate.Session;
 
 import java.io.Serializable;
+import java.lang.reflect.Field;
 import java.util.*;
 
 /**
@@ -21,16 +23,15 @@ public class HBPersistenceManager {
 
     public boolean isTranscationStarted;
     public boolean isTranscationEnded;
-    public Session session;
 
-    public HBPersistenceManager(Session session) {
-        this.session = session;
+    public Session getSession() {
+        return HBSessionFactory.getSessionFactory().getSession();
     }
 
     public void startTranscation() {
         this.isTranscationStarted = Boolean.TRUE;
-        if (this.session.isConnected()) {
-            this.session.getTransaction().begin();
+        if (this.getSession().isConnected()) {
+            this.getSession().getTransaction().begin();
         }
     }
 
@@ -38,27 +39,27 @@ public class HBPersistenceManager {
         this.isTranscationStarted = Boolean.FALSE;
         this.isTranscationEnded = Boolean.TRUE;
         try {
-            this.session.flush();
-            this.session.getTransaction().commit();
+            this.getSession().getTransaction().commit();
+            this.getSession().flush();
         } catch (Exception eObj) {
             eObj.printStackTrace();
             log.error("Exception Occured endTranscation(): " + eObj);
-            this.session.getTransaction().rollback();
-            this.session.clear();
+            this.getSession().getTransaction().rollback();
+            this.getSession().clear();
         }
     }
 
     public void closeSession() {
-        if (Objects.nonNull(this.session) && this.session.isConnected()) {
-            this.session.disconnect();
-            this.session.close();
+        if (Objects.nonNull(this.getSession()) && this.getSession().isConnected()) {
+            this.getSession().disconnect();
+            this.getSession().close();
         }
     }
 
     public void rollback() {
-        if (Objects.nonNull(this.session) && this.session.isConnected()) {
-            this.session.flush();
-            this.session.getTransaction().rollback();
+        if (Objects.nonNull(this.getSession()) && this.getSession().isConnected()) {
+            this.getSession().flush();
+            this.getSession().getTransaction().rollback();
             this.isTranscationStarted = Boolean.FALSE;
             this.isTranscationEnded = Boolean.TRUE;
         }
@@ -67,7 +68,7 @@ public class HBPersistenceManager {
     public Serializable persistObject(Object object) {
         Serializable insertedPk = null;
         try {
-            insertedPk = this.session.save(object);
+            insertedPk = this.getSession().save(object);
         } catch (Exception eObj) {
             throw eObj;
         }
@@ -77,7 +78,7 @@ public class HBPersistenceManager {
     public <T> Object findOBject(Class<T> classObj, Number id) {
         Object object = null;
         try {
-            object = this.session.get(classObj, id);
+            object = this.getSession().get(classObj, id);
         } catch (Exception eObj) {
             throw new RuntimeException(eObj);
         }
@@ -100,7 +101,8 @@ public class HBPersistenceManager {
         try {
             cls = Class.forName(className);
             hbsspObject = (HBSSPObject) cls.newInstance();
-            this.session.save(hbsspObject);
+            this.setKeyValueProperty(hbsspObject, objMap);
+            this.getSession().save(hbsspObject);
         } catch (ClassNotFoundException | InstantiationException | IllegalAccessException e) {
             throw e;
         } catch (Exception eobj) {
@@ -110,11 +112,25 @@ public class HBPersistenceManager {
         return hbsspObject;
     }
 
-    public ArrayList<Object> fetchHSSPSQLQuery(String sqlStr, Map<String, Object> newMap) {
-        ArrayList<Object> list = new ArrayList<>();
-        Query query = this.session.createSQLQuery(sqlStr);
-        this.setSQLProperty(query, newMap);
-        list.addAll(query.list());
+    private void setKeyValueProperty(HBSSPObject hbsspObject, HashMap<String, Object> objMap) throws IllegalAccessException {
+        for (Field field : hbsspObject.getClass().getDeclaredFields()) {
+            Object object = objMap.get(field.getName());
+            if (Objects.nonNull(object)) {
+                field.setAccessible(true);
+                field.set(hbsspObject, object);
+            }
+        }
+    }
+
+    public <T> ArrayList<T> fetchHSSPSQLQuery(Class<T> cls, String sqlStr, Map<String, Object> newMap) {
+        ArrayList<T> list = new ArrayList<>();
+        try {
+            Query query = this.getSession().createSQLQuery(sqlStr);
+            this.setSQLProperty(query, newMap);
+            list.addAll(query.list());
+        } catch (Exception eobj) {
+            eobj.printStackTrace();
+        }
         return list;
     }
 
@@ -134,7 +150,7 @@ public class HBPersistenceManager {
     private ArrayList<Long> fetchNativeNamedSQLQuery(String namedQuery, HashMap<String, Object> newMap) {
         ArrayList<Long> list = new ArrayList<>();
         try {
-            Query query = this.session.getNamedQuery(namedQuery);
+            Query query = this.getSession().getNamedQuery(namedQuery);
             this.setSQLProperty(query, newMap);
             for (Object obj : query.list()) {
                 list.add(((Long) obj).longValue());
@@ -145,9 +161,17 @@ public class HBPersistenceManager {
         return list;
     }
 
+    public void updateObject(Object object) {
+        try {
+            this.getSession().persist(object);
+        } catch (Exception eobj) {
+            throw eobj;
+        }
+    }
+
     public void deleteObject(Object object) {
         try {
-            this.session.delete(object);
+            this.getSession().delete(object);
         } catch (Exception eobj) {
             throw eobj;
         }

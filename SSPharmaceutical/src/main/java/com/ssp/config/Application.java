@@ -5,8 +5,13 @@
  */
 package com.ssp.config;
 
+import com.ssp.modal.Medicine;
+import com.ssp.service.HBPersistenceManager;
 import com.ssp.service.HBService;
+import com.ssp.util.HBGNUtil;
 import lombok.extern.log4j.Log4j;
+
+import java.util.ArrayList;
 
 /**
  * @author Shrey
@@ -17,8 +22,28 @@ public class Application {
     private static final HBService hbService = new HBService();
 
     public static void main(String[] args) {
-        hbService.loadAllConfiguration();
-
+        try {
+            hbService.loadAllConfiguration();
+            HBPersistenceManager hbPersistenceManager = new HBPersistenceManager();
+            HBGNUtil util = new HBGNUtil();
+            hbPersistenceManager.startTranscation();
+           /* hbPersistenceManager.createObject("com.ssp.modal.Medicine", util.newKeyValueMap("medicineName~contentWeight~medicineSalt~expiryDate~mfdDate~storeDate~price~CompanyName",
+                    "Paracetamol", 150, "2-Dexoy-HydroxineChlorine", new Date(System.currentTimeMillis()), new Date(System.currentTimeMillis()), new Date(System.currentTimeMillis()),
+                    50, "Cipla"));*/
+            ArrayList<Medicine> medicineArrayList = hbPersistenceManager.fetchHSSPSQLQuery(Medicine.class, "select * from Medicine e", null);
+            log.info(medicineArrayList + " >>>>>>>>>>>>>>>>>>>>>>>>>> medicineArrayList ");
+            if (medicineArrayList.size() != 0) {
+                for (Object med : medicineArrayList) {
+                    Medicine medicine = (Medicine) med;
+                    medicine.setMedicineName("Paracip");
+                    hbPersistenceManager.updateObject(medicine);
+                }
+            }
+            hbPersistenceManager.endTranscation();
+        } catch (Exception eobj) {
+            eobj.printStackTrace();
+            log.error("Exception Occur : Main " + eobj);
+        }
     }
 
 }

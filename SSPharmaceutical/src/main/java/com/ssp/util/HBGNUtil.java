@@ -19,7 +19,7 @@ public class HBGNUtil {
         if (Objects.isNull(_values)) {
             return;
         }
-        String[] keys = _keys.split("_");
+        String[] keys = _keys.split("~");
         int count = keys.length;
         if (_values.length < count) {
             count = _values.length;
