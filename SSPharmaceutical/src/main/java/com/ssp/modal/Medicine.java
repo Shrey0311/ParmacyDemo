@@ -8,6 +8,7 @@ import java.sql.Date;
 @Data
 @Entity
 @Table(name = "MEDICINE")
+@NamedQuery(name = "Medicine_get", query = "select e from com.ssp.modal.Medicine e")
 public class Medicine extends HBSSPObject {
 
     @Column(name = "MEDICINE_NAME")

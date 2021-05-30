@@ -26,19 +26,22 @@ public class Application {
             hbService.loadAllConfiguration();
             HBPersistenceManager hbPersistenceManager = new HBPersistenceManager();
             HBGNUtil util = new HBGNUtil();
-            hbPersistenceManager.startTranscation();
+           hbPersistenceManager.startTranscation();
            /* hbPersistenceManager.createObject("com.ssp.modal.Medicine", util.newKeyValueMap("medicineName~contentWeight~medicineSalt~expiryDate~mfdDate~storeDate~price~CompanyName",
                     "Paracetamol", 150, "2-Dexoy-HydroxineChlorine", new Date(System.currentTimeMillis()), new Date(System.currentTimeMillis()), new Date(System.currentTimeMillis()),
                     50, "Cipla"));*/
-            ArrayList<Medicine> medicineArrayList = hbPersistenceManager.fetchHSSPSQLQuery(Medicine.class, "select * from Medicine e", null);
+            ArrayList<Medicine> medicineArrayList = hbPersistenceManager.fetchHSSPSQLQuery(Medicine.class, "Medicine_get", null);
             log.info(medicineArrayList + " >>>>>>>>>>>>>>>>>>>>>>>>>> medicineArrayList ");
             if (medicineArrayList.size() != 0) {
-                for (Object med : medicineArrayList) {
-                    Medicine medicine = (Medicine) med;
-                    medicine.setMedicineName("Paracip");
+                for (Medicine medicine : medicineArrayList) {
+                    medicine.setMedicineName("ParacetomolChange");
                     hbPersistenceManager.updateObject(medicine);
+                   /* if(medicine.primaryKey().intValue() == 9){
+                        hbPersistenceManager.deleteObject(medicine);
+                    }*/
                 }
             }
+
             hbPersistenceManager.endTranscation();
         } catch (Exception eobj) {
             eobj.printStackTrace();

@@ -20,7 +20,9 @@
             org.hibernate.context.internal.ThreadLocalSessionContext
         </property>
         <property name="hibernate.hbm2ddl.auto">update</property>
+        <property name="hibernate.connection.provider_disables_autocommit">false</property>
         <!-- Mapping With Model Class Containing Annotations -->
         <!--<mapping class="com.data.modal.Medicine" />-->
     </session-factory>
 </hibernate-configuration>
+

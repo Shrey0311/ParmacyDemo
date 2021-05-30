@@ -65,14 +65,18 @@ public class HBPersistenceManager {
         }
     }
 
-    public Serializable persistObject(Object object) {
-        Serializable insertedPk = null;
+    public Serializable persistObject(Object object) throws Exception {
+        return this.getSession().save(object);
+    }
+
+    public void persistObject(Collection<?> collection) {
         try {
-            insertedPk = this.getSession().save(object);
-        } catch (Exception eObj) {
-            throw eObj;
+            for (Object object : collection) {
+                this.getSession().save(object);
+            }
+        } catch (Exception eobj) {
+            throw eobj;
         }
-        return insertedPk;
     }
 
     public <T> Object findOBject(Class<T> classObj, Number id) {
@@ -125,7 +129,7 @@ public class HBPersistenceManager {
     public <T> ArrayList<T> fetchHSSPSQLQuery(Class<T> cls, String sqlStr, Map<String, Object> newMap) {
         ArrayList<T> list = new ArrayList<>();
         try {
-            Query query = this.getSession().createSQLQuery(sqlStr);
+            Query query = this.getSession().getNamedQuery(sqlStr);
             this.setSQLProperty(query, newMap);
             list.addAll(query.list());
         } catch (Exception eobj) {
@@ -163,7 +167,7 @@ public class HBPersistenceManager {
 
     public void updateObject(Object object) {
         try {
-            this.getSession().persist(object);
+            this.getSession().update(object);
         } catch (Exception eobj) {
             throw eobj;
         }

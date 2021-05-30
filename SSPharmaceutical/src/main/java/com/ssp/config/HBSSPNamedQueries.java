@@ -6,7 +6,7 @@ import javax.persistence.NamedQueries;
 
 @Entity
 @NamedQueries({
-
+    //@NamedQuery(name = "Medicine_get", query ="select e from com.ssp.modal.Medicine e")
 })
 @NamedNativeQueries({
 
